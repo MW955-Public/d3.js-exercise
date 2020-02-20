@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+    <body><meta charset="UTF-8">
+        <head>
+            <script src="https://d3js.org/d3.v5.min.js"></script>
+            <script src="https://d3js.org/d3-axis.v1.min.js"></script>
+        </head>
+    <h3>NetId: mw955</h3>
+    <div class="container larger">
+        <p>Problem1:</p>
+        <svg id="all" height="240" width="240" style="background: #F5F5F5"></svg>
+        
+            <script id="notes">
+                data = [{"x":1.0 ,"y":1.0}, {"x":2.0 ,"y":1.0}, {"x":3.0 ,"y":2.0},{"x":4.0 ,"y":3.0}, {"x":4.5 ,"y":4.5}, {"x":5.0 ,"y":5.5},{"x":5.5 ,"y":6.5}, {"x":6.0 ,"y":8.0}, {"x":7.0 ,"y":9.0},{"x":8.0 ,"y":9.0}, {"x":9.0 ,"y":9.0}];
+                let svg = d3.select("svg#all");
+                //console.log(svg);
+                let width = svg.attr("width");
+                let height = svg.attr("height");
+                //console.log("123");
+                
+                for (let i=0; i<11; i++){
+                    svg.append("line")
+                        .attr("x1",20+i*20)
+                        .attr("x2",20+i*20)
+                        .attr("y1",20)
+                        .attr("y2",220) 
+                        .style("stroke", "#5555F0")
+                        .style("stroke-width", 1);
+                    svg.append("line")
+                        .attr("x1",20)
+                        .attr("x2",220)
+                        .attr("y1",20+i*20)
+                        .attr("y2",20+i*20) 
+                        .style("stroke", "#5555F0")
+                        .style("stroke-width", 1)
+                }
+                var xscale = d3.scaleLinear()
+                        .domain([0, 10])
+                        .range([20, width - 20]);
+         
+                var yscale = d3.scaleLinear()
+                        .domain([0, 10])//d3.max(data)
+                        .range([height-20, 20]);
+    
+                var x_axis = d3.axisBottom().scale(xscale);
+         
+                var y_axis = d3.axisLeft().scale(yscale);
+         
+                svg.append("g")
+                    .attr("transform", "translate(20, 0)")
+                    .call(y_axis.ticks(3));
+                svg.append("g")
+                    .attr("transform", "translate(0, 220)")
+                    .call(x_axis.ticks(3));
+
+                data.forEach(function(d,i) {
+                    let circle=svg.append("circle")
+                    .attr("r", 4)
+                    .attr("cx",xscale( d["x"] ))
+                    .attr("cy",xscale( 10-d["y"]))
+                    .style("fill", "darkblue")
+                    .on("click", function() { circle.style("fill", "red");});
+            });
+            
+            </script>
+            
+
+    </div>
+    <div class="diamond">
+        <p>Problem2:</p>
+        <svg id="p1" height="400" width="400" style="background: #F5F5F5"></svg>
+        <script>
+            const svg2 = d3.select("svg#p1");
+            const width2 = svg2.attr("width");
+            const height2 = svg2.attr("height");
+            const margins = {"top": 5, "right": 5, "bottom": 0, "left": 0}; // Can leave out quotes
+            const chartWidth = width2 - margins.left - margins.right;
+            const chartHeight = height2 - margins.top - margins.bottom;
+            let scatter = svg2.append("g")
+                    .attr("transform","translate("+margins.right+","+margins.top+")");
+
+            d3.json("diamonds.json")
+                .then((data)=>{
+                  //console.log(data);
+                  data.forEach( (d, i) => {
+                        d['carat'] = Number(d['carat']);
+                        d['price'] = Number(d['price']);
+                   
+                });
+                    data = data.filter( (d) => {return d['carat'] != 0 && d['price'] != 0;}  );
+                    console.log(data);
+                    const caratMin = d3.min(data, (d) => {return d['carat'];} );  
+                    // d3.minmax takes in two params, first is the array, second is the "getter" function for each element -- you have to tell d3.max what values you want it to inspect
+                    const caratMax = d3.max(data, (d) => {return d['carat'];} );
+                    const caratScale = d3.scaleLinear().domain([caratMin, caratMax]).range([0, chartWidth]);
+
+                    const priceMin = d3.min(data, (d) => {return d['price'];} );
+                    const priceMax = d3.max(data, (d) => {return d['price'];} );
+                    const priceScale = d3.scaleLinear().domain([priceMin, priceMax])
+                                        .range([chartHeight, 0]); // invert height for coord system!
+                    
+
+                    for(let i=caratMin; i<=caratMax; i++){
+                        scatter.append("line")
+                        .attr("x1",caratScale(i)+5)
+                        .attr("x2",caratScale(i)+5)
+                        .attr("y1",margins.top)
+                        .attr("y2",400) 
+                        .style("stroke", "#5555F0")
+                        .style("stroke-width", 1);
+
+                    }
+                    for(let i=priceMin; i<=priceMax; i=i+1000){
+                        scatter.append("line")
+                        .attr("y1",priceScale(i))
+                        .attr("y2",priceScale(i))
+                        .attr("x1",margins.right)
+                        .attr("x2",400) 
+                        .style("stroke", "#5555F0")
+                        .style("stroke-width", 1);
+
+                    }
+                    data.forEach( (d, i) => {
+
+                        scatter.append("circle")
+                            .attr("cx", Math.floor(caratScale(d['carat']))+5)
+                            .attr("cy", priceScale(d['price']))
+                            .attr("r", 3)
+                            .attr("opacity", 0.4)
+                            .attr("index", i)  // I usually include the index as an extra attr so that if points look weird, I can find out what's going on in the dataset
+                            .style("fill", "darkblue");
+
+                        });
+                });
+        </script>
+        <p>
+            The relationship between price and carats in the diamonds in the dataset is relatively linear. It feels like f(x)=x²
+        </p>
+    </div>
+    <div>
+    <div calss="twitter">
+        <p>Problem3-a:</p>
+        <svg id="p3" height="300" width="730" style="background: #F5F5F5"></svg>
+        <script>
+        const svg3 = d3.select("svg#p3")
+        
+        d3.json("tweets.json")
+                .then((data)=>{
+                  console.log(data);
+                  data.forEach( (d, i) => {
+                        d['Total'] = Number(d['Total']);
+                });
+                data = data.filter( (d) => {return d['Total'] != 0;}  );
+                const totalMin = d3.min(data, (d) => {return d['Total'];} );
+                const totalMax = d3.max(data, (d) => {return d['Total'];} );
+                const totalScale = d3.scaleLinear().domain([totalMin, totalMax])
+                                        .range([300, 0]); // invert height for coord system!
+                for(let i=0; i<=730; i=i+30){
+                        svg3.append("line")
+                        .attr("x1",i)
+                        .attr("x2",i)
+                        .attr("y1",0)
+                        .attr("y2",300) 
+                        .style("stroke", "lightgrey")
+                        .style("stroke-width", 1);
+
+                        
+                    };
+                for(let i=0; i<=totalMax; i=i+1000){
+                        svg3.append("line")
+                        .attr("x1",0)
+                        .attr("x2",730)
+                        .attr("y1",totalScale(i))
+                        .attr("y2",totalScale(i)) 
+                        .style("stroke", "lightgrey")
+                        .style("stroke-width", 1);
+
+                    };
+                data.forEach( (d, i) => {
+
+                    svg3.append("rect")
+                        .attr("x", d.Number)
+                        .attr("y", totalScale(d.Total))
+                        .attr("width", 1)
+                        .attr("height", 300-totalScale(d.Total))
+                        .attr("index", i)  // I usually include the index as an extra attr so that if points look weird, I can find out what's going on in the dataset
+                        .style("fill", "orange");
+                });
+                
+                
+            });
+        </script>
+
+    </div>
+    <div calss="twitter">
+        <p>Problem3-b:</p>
+        <svg id="p4" height="300" width="730" style="background: #F5F5F5"></svg>
+        <script>
+        const svg4 = d3.select("svg#p4")
+        
+        d3.json("tweets.json")
+                .then((data)=>{
+                  console.log(data);
+                  data.forEach( (d, i) => {
+                        d['RightTroll'] = Number(d['RightTroll']);
+                        d['LeftTroll'] = Number(d['LeftTroll']);
+                });
+                data = data.filter( (d) => {return d['RightTroll'] != 0&&d['LeftTroll'] != 0;}  );
+                const rightMin = d3.min(data, (d) => {return d['RightTroll'];} );
+                const rightMax = d3.max(data, (d) => {return d['RightTroll'];} );
+                
+                const leftMin = d3.min(data, (d) => {return d['LeftTroll'];} );
+                const leftMax = d3.max(data, (d) => {return d['LeftTroll'];} );
+               
+                let allMax = d3.max(data, function(d) { return Math.max(d['RightTroll'],d['LeftTroll']); });
+                let allMin = d3.min(data, function(d) { return Math.min(d['RightTroll'],d['LeftTroll']); });
+                const allScale = d3.scaleLinear().domain([allMin, allMax])
+                                        .range([300, 0]);
+                
+                
+                console.log(allMax);
+                console.log(allMin);
+                for(let i=0; i<=730; i=i+30){
+                        svg4.append("line")
+                        .attr("x1",i)
+                        .attr("x2",i)
+                        .attr("y1",0)
+                        .attr("y2",300) 
+                        .style("stroke", "lightgrey")
+                        .style("stroke-width", 1);
+
+                        
+                    };
+                for(let i=0; i<=allMax; i=i+1000){
+                        svg4.append("line")
+                        .attr("x1",0)
+                        .attr("x2",730)
+                        .attr("y1",allScale(i))
+                        .attr("y2",allScale(i)) 
+                        .style("stroke", "lightgrey")
+                        .style("stroke-width", 1);
+
+                    };
+                data.forEach( (d, i) => {
+
+                        svg4.append("rect")
+                            .attr("x", d.Number)
+                            .attr("y", allScale(d.RightTroll))
+                            .attr("width", 1)
+                            .attr("height", 300-allScale(d.RightTroll))
+                            .attr("index", i)
+                            .attr("opacity", 0.5)  // I usually include the index as an extra attr so that if points look weird, I can find out what's going on in the dataset
+                            .style("fill", "red");
+                        svg4.append("rect")
+                            .attr("x", d.Number)
+                            .attr("y", allScale(d.LeftTroll))
+                            .attr("width", 1)
+                            .attr("height", 300-allScale(d.LeftTroll))
+                            .attr("index", i)
+                            .attr("opacity", 0.5)  // I usually include the index as an extra attr so that if points look weird, I can find out what's going on in the dataset
+                            .style("fill", "blue");
+                            
+                        });
+                
+                
+                
+            });
+        </script>
+
+        </div>
+    </div>
+    <div class="p4">
+        <p>Problem4:</p>
+        <div>
+            <ul>a
+                <ol>It is a divergent divergent scale</ol>
+                <ol>It is not an effective color scale. Because it fades to grey so that it has small hue contrast and low brightness contrast.</ol>
+            </ul>
+            <ul>b
+                <ol>I don't think it's an effective color scale for this task</ol>
+                <ol>Because both red and yellow cue people of the negative feelings.</ol>
+            </ul>
+            <ul>c
+                <ol>Tritanomaly, Protanopia, Deuteranopia, Tritanopia, and Monochromacy.</ol>
+            </ul>
+            <ul>d
+                <ol>I won't recommend them use rainbow scale</ol>
+                <ol>Because it does not intuitively create a sense
+                    of quantity</ol>
+            </ul>
+
+        </div>
+    </div>
+    </body>
+</html>
